@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Slides Search</title>
+<title>Hymns</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -18,14 +18,6 @@
   .icon-btn:hover { background: var(--bg); }
   .screen { display: none; flex-direction: column; flex: 1; }
   .screen.active { display: flex; }
-  .settings-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 20px; max-width: 520px; margin: 0 auto; width: 100%; }
-  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
-  .field input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; font-size: 15px; outline: none; background: var(--card); }
-  .field input:focus { border-color: var(--primary); }
-  .field .hint { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.5; }
-  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 13px 20px; border-radius: var(--radius); font-size: 15px; font-weight: 600; border: none; cursor: pointer; }
-  .btn-primary { background: var(--primary); color: #fff; width: 100%; }
-  .btn-primary:hover { background: var(--primary-dark); }
   .search-bar { padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
   .search-bar input { width: 100%; border: 1px solid var(--border); border-radius: 50px; padding: 10px 16px; font-size: 15px; outline: none; background: var(--bg); }
   .search-bar input:focus { border-color: var(--primary); background: #fff; }
@@ -55,30 +47,13 @@
 </head>
 <body>
 
-<div class="screen active" id="settings-screen">
-  <div class="topbar"><h1>⚙️ Setup</h1></div>
-  <div class="settings-body">
-    <div class="field">
-      <label>Google API Key</label>
-      <input type="password" id="api-key-input" placeholder="AIza…" autocomplete="off" />
-    </div>
-    <div class="field">
-      <label>Google Drive Folder ID or URL</label>
-      <input type="text" id="folder-input" placeholder="https://drive.google.com/drive/folders/…" />
-      <p class="hint">The folder must be shared as "Anyone with the link" (Viewer).</p>
-    </div>
-    <button class="btn btn-primary" onclick="saveSettings()">Save &amp; Load Slides</button>
-  </div>
-</div>
-
-<div class="screen" id="list-screen">
+<div class="screen active" id="list-screen">
   <div class="topbar">
     <h1>🎵 Hymns</h1>
-    <button class="icon-btn" onclick="showSettings()">⚙️</button>
     <button class="icon-btn" onclick="loadSlides()">🔄</button>
   </div>
   <div class="search-bar">
-    <input type="search" id="search-input" placeholder="Search presentations…" oninput="filterSlides()" />
+    <input type="search" id="search-input" placeholder="Search hymns…" oninput="filterSlides()" />
   </div>
   <div id="error-banner" class="error-banner"></div>
   <div class="list-body" id="list-body">
@@ -100,23 +75,18 @@
 </div>
 
 <script>
-  let allSlides = [];
-  const KEY_API = 'slides_api_key';
-  const KEY_FOLDER = 'slides_folder_id';
+  const API_KEY   = 'AIzaSyCIS525yIhValgUn87JS8EIHbce6ur7pzg';
+  const FOLDER_ID = '1xZ34slens8JkqfZ34tCdDLtgkC8yhl_d';
 
-  (function init() {
-    const key = localStorage.getItem(KEY_API);
-    const folder = localStorage.getItem(KEY_FOLDER);
-    if (key) document.getElementById('api-key-input').value = key;
-    if (folder) document.getElementById('folder-input').value = folder;
-    if (key && folder) { showList(); loadSlides(); }
-  })();
+  let allSlides = [];
+
+  loadSlides();
 
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
-  function showSettings() { showScreen('settings-screen'); }
+
   function showList() {
     const frame = document.getElementById('slide-frame');
     frame.src = ''; frame.style.display = 'none';
@@ -124,25 +94,7 @@
     showScreen('list-screen');
   }
 
-  function extractFolderId(raw) {
-    raw = (raw || '').trim();
-    const m = raw.match(/folders\/([a-zA-Z0-9_-]+)/);
-    return m ? m[1] : raw;
-  }
-
-  function saveSettings() {
-    const key = document.getElementById('api-key-input').value.trim();
-    const folder = document.getElementById('folder-input').value.trim();
-    if (!key || !folder) { alert('Please fill in both fields.'); return; }
-    localStorage.setItem(KEY_API, key);
-    localStorage.setItem(KEY_FOLDER, extractFolderId(folder));
-    showList(); loadSlides();
-  }
-
   async function loadSlides() {
-    const key = localStorage.getItem(KEY_API) || '';
-    const folderId = localStorage.getItem(KEY_FOLDER) || '';
-    if (!key || !folderId) { showSettings(); return; }
     hideError();
     document.getElementById('list-body').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
     const mimeQ = [
@@ -150,13 +102,13 @@
       "mimeType='application/vnd.ms-powerpoint'",
       "mimeType='application/vnd.openxmlformats-officedocument.presentationml.presentation'"
     ].join(' or ');
-    const q = `'${folderId}' in parents and (${mimeQ}) and trashed=false`;
+    const q = `'${FOLDER_ID}' in parents and (${mimeQ}) and trashed=false`;
     const fields = 'files(id,name,mimeType,modifiedTime,webViewLink)';
-    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&orderBy=name&pageSize=200&key=${encodeURIComponent(key)}`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&orderBy=name&pageSize=200&key=${encodeURIComponent(API_KEY)}`;
     try {
       const res = await fetch(url);
       const data = await res.json();
-      if (data.error) { showError('Google API error: ' + data.error.message); document.getElementById('list-body').innerHTML = ''; return; }
+      if (data.error) { showError('Error: ' + data.error.message); document.getElementById('list-body').innerHTML = ''; return; }
       allSlides = data.files || [];
       renderSlides(allSlides);
     } catch(e) {
@@ -168,20 +120,18 @@
   function renderSlides(slides) {
     const body = document.getElementById('list-body');
     if (!slides.length) {
-      body.innerHTML = '<div class="empty-state"><div class="emoji">🔍</div><p>No presentations found.</p></div>';
+      body.innerHTML = '<div class="empty-state"><div class="emoji">🔍</div><p>No hymns found.</p></div>';
       return;
     }
     body.innerHTML = '';
     slides.forEach(s => {
-      const date = s.modifiedTime ? new Date(s.modifiedTime).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}) : '';
       const isGSlides = s.mimeType === 'application/vnd.google-apps.presentation';
       const card = document.createElement('div');
       card.className = 'slide-card';
       card.innerHTML = `
-        <div class="slide-icon">${isGSlides ? '🖥' : '📊'}</div>
+        <div class="slide-icon">${isGSlides ? '🎵' : '📊'}</div>
         <div class="slide-info">
           <div class="slide-name">${escHtml(s.name)}</div>
-          <div class="slide-meta">${date}${isGSlides ? ' · Google Slides' : ' · PowerPoint'}</div>
         </div>
         <div class="slide-arrow">›</div>`;
       card.addEventListener('click', () => openSlide(s.id, s.name, s.mimeType, s.webViewLink || ''));
@@ -206,8 +156,7 @@
     } else {
       embedUrl = `https://docs.google.com/viewer?srcid=${id}&pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
     }
-    const openUrl = webViewLink || `https://docs.google.com/presentation/d/${id}/edit`;
-    document.getElementById('open-external-btn').href = openUrl;
+    document.getElementById('open-external-btn').href = webViewLink || `https://docs.google.com/presentation/d/${id}/edit`;
     const placeholder = document.getElementById('frame-placeholder');
     const frame = document.getElementById('slide-frame');
     placeholder.style.display = 'flex';
