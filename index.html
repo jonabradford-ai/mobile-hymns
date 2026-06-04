@@ -47,17 +47,23 @@
   #viewer-screen .topbar { background: #1a1a1a; border-color: #333; }
   #viewer-screen .topbar h1 { color: #fff; font-size: 15px; }
   #viewer-screen .icon-btn { color: #aaa; }
-  .viewer-body { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .slide-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease; }
-  .slide-img.visible { opacity: 1; }
-  .img-spinner { position: absolute; width: 36px; height: 36px; border: 3px solid #333; border-top-color: #888; border-radius: 50%; animation: spin .7s linear infinite; z-index: 5; pointer-events: none; transition: opacity 0.2s; }
-  .img-spinner.hidden { opacity: 0; }
+  .viewer-body { flex: 1; position: relative; overflow: hidden; background: #000; }
+  .viewer-loading { position: absolute; inset: 0; background: #111; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.3s ease; }
+  .viewer-loading.hidden { opacity: 0; pointer-events: none; }
+  .viewer-loading .spinner { border-color: #444; border-top-color: #888; }
+  #slide-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.4s ease; }
+  #slide-frame.loaded { opacity: 1; }
+  .swipe-zone { position: absolute; top: 0; bottom: 0; width: 20%; z-index: 5; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; }
+  .swipe-zone:active { opacity: 1; }
+  .swipe-zone.left { left: 0; }
+  .swipe-zone.right { right: 0; }
+  .swipe-zone-arrow { background: rgba(255,255,255,0.15); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; }
   .slide-nav { background: #1a1a1a; border-top: 1px solid #333; padding: 10px 24px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .nav-btn { background: #2c2c2e; border: none; color: #fff; font-size: 30px; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; flex-shrink: 0; transition: background .1s, opacity .1s; }
   .nav-btn:active { background: #48484a; }
   .nav-btn:disabled { opacity: 0.2; pointer-events: none; }
-  .slide-counter { color: #e0e0e0; font-size: 15px; font-weight: 600; text-align: center; min-width: 110px; }
-  .slide-counter.pending { color: #555; }
+  .slide-counter { color: #888; font-size: 13px; font-weight: 500; text-align: center; min-width: 110px; line-height: 1.4; }
+  .swipe-hint { font-size: 11px; color: #555; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -86,15 +92,19 @@
     <button class="icon-btn" onclick="showList()">◀ Back</button>
     <h1 id="viewer-title"></h1>
   </div>
-  <div class="viewer-body">
-    <div class="img-spinner" id="img-spinner"></div>
-    <img class="slide-img" id="slide-img-a" />
-    <img class="slide-img" id="slide-img-b" />
+  <div class="viewer-body" id="viewer-body">
+    <div class="viewer-loading" id="viewer-loading"><div class="spinner"></div></div>
+    <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
+    <div class="swipe-zone left" onclick="tapPrev()"><div class="swipe-zone-arrow">‹</div></div>
+    <div class="swipe-zone right" onclick="tapNext()"><div class="swipe-zone-arrow">›</div></div>
   </div>
   <div class="slide-nav">
-    <button class="nav-btn" id="prev-btn" onclick="prevSlide()" disabled>‹</button>
-    <div class="slide-counter pending" id="slide-counter">—</div>
-    <button class="nav-btn" id="next-btn" onclick="nextSlide()" disabled>›</button>
+    <button class="nav-btn" id="prev-btn" onclick="prevSlide()">‹</button>
+    <div class="slide-counter">
+      <div id="counter-text">Slide 1</div>
+      <div class="swipe-hint">swipe or tap edges to navigate</div>
+    </div>
+    <button class="nav-btn" id="next-btn" onclick="nextSlide()">›</button>
   </div>
 </div>
 
@@ -102,21 +112,15 @@
   const API_KEY   = 'AIzaSyCIS525yIhValgUn87JS8EIHbce6ur7pzg';
   const FOLDER_ID = '1xZ34slens8JkqfZ34tCdDLtgkC8yhl_d';
 
-  let allSlides = [];
-  let showOnlyBookmarked = false;
+  let allSlides = [], showOnlyBookmarked = false;
   let bookmarks = JSON.parse(localStorage.getItem('hymn_bookmarks') || '{}');
-  let slideObjectIds = [];
-  let thumbnailCache = {};
-  let currentSlide = 1;
-  let totalSlides = 0;
-  let currentPresId = null;
-  let activeImg = 'a';
-  let navigating = false;
+  let currentSlide = 1, currentPresId = null;
 
   const BOOKMARK_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 
   showScreen('list-screen');
   loadSlides();
+  setupSwipe();
 
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','visible'));
@@ -126,176 +130,99 @@
   }
 
   function showList() {
-    currentPresId = null; slideObjectIds = []; thumbnailCache = {};
+    const frame = document.getElementById('slide-frame');
+    frame.classList.remove('loaded'); frame.src = '';
+    document.getElementById('viewer-loading').classList.remove('hidden');
+    currentPresId = null;
     showScreen('list-screen');
   }
 
   async function loadSlides() {
     hideError();
     document.getElementById('list-body').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>';
-    const mimeQ = [
-      "mimeType='application/vnd.google-apps.presentation'",
-      "mimeType='application/vnd.ms-powerpoint'",
-      "mimeType='application/vnd.openxmlformats-officedocument.presentationml.presentation'"
-    ].join(' or ');
+    const mimeQ = ["mimeType='application/vnd.google-apps.presentation'","mimeType='application/vnd.ms-powerpoint'","mimeType='application/vnd.openxmlformats-officedocument.presentationml.presentation'"].join(' or ');
     const q = `'${FOLDER_ID}' in parents and (${mimeQ}) and trashed=false`;
     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent('files(id,name,mimeType)')}&orderBy=name&pageSize=200&key=${encodeURIComponent(API_KEY)}`;
     try {
-      const res = await fetch(url);
-      const data = await res.json();
+      const res = await fetch(url); const data = await res.json();
       if (data.error) { showError('Drive API error: ' + data.error.message); document.getElementById('list-body').innerHTML = ''; return; }
-      allSlides = data.files || [];
-      renderSlides(getFilteredSlides());
-      updateBookmarkCount();
+      allSlides = data.files || []; renderSlides(getFilteredSlides()); updateBookmarkCount();
     } catch(e) { showError('Network error: ' + e.message); document.getElementById('list-body').innerHTML = ''; }
   }
 
-  async function fetchSlideObjectIds(presId) {
-    const res = await fetch(`https://slides.googleapis.com/v1/presentations/${presId}?fields=slides.objectId&key=${encodeURIComponent(API_KEY)}`);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.slides.map(s => s.objectId);
-  }
-
-  async function fetchThumbnail(presId, objectId) {
-    const url = `https://slides.googleapis.com/v1/presentations/${presId}/pages/${objectId}/thumbnail?thumbnailProperties.mimeType=PNG&thumbnailProperties.thumbnailSize=LARGE&key=${encodeURIComponent(API_KEY)}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.contentUrl;
-  }
-
-  async function openSlide(id, name, mimeType) {
-    currentPresId = id; currentSlide = 1; totalSlides = 0;
-    slideObjectIds = []; thumbnailCache = {}; navigating = false; activeImg = 'a';
+  function openSlide(id, name) {
+    currentPresId = id; currentSlide = 1;
     document.getElementById('viewer-title').textContent = name;
-    document.getElementById('slide-img-a').classList.remove('visible');
-    document.getElementById('slide-img-b').classList.remove('visible');
-    document.getElementById('slide-img-a').src = '';
-    document.getElementById('slide-img-b').src = '';
-    setSpinner(true); updateCounter();
+    document.getElementById('viewer-loading').classList.remove('hidden');
+    document.getElementById('slide-frame').classList.remove('loaded');
+    document.getElementById('counter-text').textContent = 'Slide 1';
+    document.getElementById('prev-btn').disabled = true;
+    document.getElementById('next-btn').disabled = false;
     showScreen('viewer-screen');
-    try {
-      const ids = await fetchSlideObjectIds(id);
-      slideObjectIds = ids; totalSlides = ids.length; updateCounter();
-      await showSlideImage(1, 'a', true);
-      if (totalSlides > 1) prefetch(2);
-    } catch(e) {
-      setSpinner(false);
-      showError('Slides API error: ' + e.message + ' — Enable Google Slides API in Google Cloud Console.');
-    }
+    setTimeout(() => {
+      document.getElementById('slide-frame').src = `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
+    }, 300);
   }
 
-  async function showSlideImage(slideNum, imgId, initial) {
-    setSpinner(true); navigating = true; updateNavButtons();
-    try {
-      if (!thumbnailCache[slideNum]) {
-        thumbnailCache[slideNum] = await fetchThumbnail(currentPresId, slideObjectIds[slideNum - 1]);
+  function onFrameLoad() {
+    document.getElementById('slide-frame').classList.add('loaded');
+    document.getElementById('viewer-loading').classList.add('hidden');
+  }
+
+  function sendArrow(dir) {
+    const frame = document.getElementById('slide-frame');
+    frame.focus();
+    const key = dir === 'next' ? 'ArrowRight' : 'ArrowLeft';
+    frame.contentWindow?.postMessage({ type: 'keydown', key }, '*');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  }
+
+  function prevSlide() { if (currentSlide <= 1) return; currentSlide--; updateSlideCounter(); sendArrow('prev'); }
+  function nextSlide() { currentSlide++; updateSlideCounter(); sendArrow('next'); }
+  function tapPrev() { prevSlide(); }
+  function tapNext() { nextSlide(); }
+
+  function updateSlideCounter() {
+    document.getElementById('counter-text').textContent = `Slide ${currentSlide}`;
+    document.getElementById('prev-btn').disabled = currentSlide <= 1;
+  }
+
+  function setupSwipe() {
+    const body = document.getElementById('viewer-body');
+    let startX = 0, startY = 0;
+    body.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true });
+    body.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) nextSlide(); else prevSlide();
       }
-      const img = document.getElementById('slide-img-' + imgId);
-      const other = imgId === 'a' ? 'b' : 'a';
-      await loadImage(img, thumbnailCache[slideNum]);
-      setSpinner(false);
-      img.classList.add('visible');
-      if (!initial) document.getElementById('slide-img-' + other).classList.remove('visible');
-      activeImg = imgId; navigating = false; updateNavButtons();
-      const next = slideNum + 1;
-      if (next <= totalSlides && !thumbnailCache[next]) prefetch(next);
-    } catch(e) { setSpinner(false); navigating = false; updateNavButtons(); }
-  }
-
-  function loadImage(imgEl, url) {
-    return new Promise((resolve, reject) => { imgEl.onload = resolve; imgEl.onerror = reject; imgEl.src = url; });
-  }
-
-  async function prefetch(slideNum) {
-    if (thumbnailCache[slideNum] || !slideObjectIds[slideNum-1]) return;
-    try { thumbnailCache[slideNum] = await fetchThumbnail(currentPresId, slideObjectIds[slideNum-1]); } catch(e) {}
-  }
-
-  async function prevSlide() {
-    if (navigating || currentSlide <= 1) return;
-    currentSlide--; updateCounter();
-    await showSlideImage(currentSlide, activeImg === 'a' ? 'b' : 'a', false);
-  }
-
-  async function nextSlide() {
-    if (navigating || (totalSlides > 0 && currentSlide >= totalSlides)) return;
-    currentSlide++; updateCounter();
-    await showSlideImage(currentSlide, activeImg === 'a' ? 'b' : 'a', false);
-  }
-
-  function setSpinner(show) { document.getElementById('img-spinner').classList.toggle('hidden', !show); }
-
-  function updateCounter() {
-    const el = document.getElementById('slide-counter');
-    if (totalSlides > 0) { el.textContent = `Slide ${currentSlide} of ${totalSlides}`; el.classList.remove('pending'); }
-    else { el.textContent = '—'; el.classList.add('pending'); }
-    updateNavButtons();
-  }
-
-  function updateNavButtons() {
-    document.getElementById('prev-btn').disabled = navigating || currentSlide <= 1;
-    document.getElementById('next-btn').disabled = navigating || (totalSlides > 0 && currentSlide >= totalSlides);
+    }, { passive: true });
   }
 
   function renderSlides(slides) {
     const body = document.getElementById('list-body');
-    if (!slides.length) {
-      body.innerHTML = showOnlyBookmarked
-        ? '<div class="empty-state"><div class="emoji">🔖</div><p>No bookmarked hymns yet.<br>Tap the bookmark icon on any hymn.</p></div>'
-        : '<div class="empty-state"><div class="emoji">🔍</div><p>No hymns found.</p></div>';
-      return;
-    }
+    if (!slides.length) { body.innerHTML = showOnlyBookmarked ? '<div class="empty-state"><div class="emoji">🔖</div><p>No bookmarked hymns yet.</p></div>' : '<div class="empty-state"><div class="emoji">🔍</div><p>No hymns found.</p></div>'; return; }
     body.innerHTML = '';
     slides.forEach(s => {
       const isBookmarked = !!bookmarks[s.id];
       const card = document.createElement('div');
       card.className = 'slide-card';
-      card.innerHTML = `
-        <div class="slide-icon">🎵</div>
-        <div class="slide-info"><div class="slide-name">${escHtml(s.name)}</div></div>
-        <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}">${BOOKMARK_SVG}</button>
-        <div class="slide-arrow">›</div>`;
-      card.addEventListener('click', e => { if (!e.target.closest('.bookmark-btn')) openSlide(s.id, s.name, s.mimeType); });
+      card.innerHTML = `<div class="slide-icon">🎵</div><div class="slide-info"><div class="slide-name">${escHtml(s.name)}</div></div><button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}">${BOOKMARK_SVG}</button><div class="slide-arrow">›</div>`;
+      card.addEventListener('click', e => { if (!e.target.closest('.bookmark-btn')) openSlide(s.id, s.name); });
       card.querySelector('.bookmark-btn').addEventListener('click', e => { e.stopPropagation(); toggleBookmark(s.id, e.currentTarget); });
       body.appendChild(card);
     });
   }
 
   function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function getFilteredSlides() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    let s = allSlides;
-    if (showOnlyBookmarked) s = s.filter(x => bookmarks[x.id]);
-    if (q) s = s.filter(x => x.name.toLowerCase().includes(q));
-    return s;
-  }
+  function getFilteredSlides() { const q = document.getElementById('search-input').value.toLowerCase(); let s = allSlides; if (showOnlyBookmarked) s = s.filter(x => bookmarks[x.id]); if (q) s = s.filter(x => x.name.toLowerCase().includes(q)); return s; }
   function filterSlides() { renderSlides(getFilteredSlides()); }
-  function toggleBookmarkFilter() {
-    showOnlyBookmarked = !showOnlyBookmarked;
-    document.getElementById('bookmark-filter-btn').classList.toggle('active', showOnlyBookmarked);
-    renderSlides(getFilteredSlides());
-  }
-  function resetBookmarks() {
-    if (!Object.keys(bookmarks).length) return;
-    if (!confirm('Remove all bookmarks?')) return;
-    bookmarks = {}; saveBookmarks(); updateBookmarkCount();
-    showOnlyBookmarked = false;
-    document.getElementById('bookmark-filter-btn').classList.remove('active');
-    renderSlides(getFilteredSlides());
-  }
-  function toggleBookmark(id, btn) {
-    if (bookmarks[id]) { delete bookmarks[id]; btn.classList.remove('bookmarked'); }
-    else { bookmarks[id] = true; btn.classList.add('bookmarked'); }
-    saveBookmarks(); updateBookmarkCount();
-    if (showOnlyBookmarked) renderSlides(getFilteredSlides());
-  }
+  function toggleBookmarkFilter() { showOnlyBookmarked = !showOnlyBookmarked; document.getElementById('bookmark-filter-btn').classList.toggle('active', showOnlyBookmarked); renderSlides(getFilteredSlides()); }
+  function resetBookmarks() { if (!Object.keys(bookmarks).length) return; if (!confirm('Remove all bookmarks?')) return; bookmarks = {}; saveBookmarks(); updateBookmarkCount(); showOnlyBookmarked = false; document.getElementById('bookmark-filter-btn').classList.remove('active'); renderSlides(getFilteredSlides()); }
+  function toggleBookmark(id, btn) { if (bookmarks[id]) { delete bookmarks[id]; btn.classList.remove('bookmarked'); } else { bookmarks[id] = true; btn.classList.add('bookmarked'); } saveBookmarks(); updateBookmarkCount(); if (showOnlyBookmarked) renderSlides(getFilteredSlides()); }
   function saveBookmarks() { localStorage.setItem('hymn_bookmarks', JSON.stringify(bookmarks)); }
-  function updateBookmarkCount() {
-    const c = Object.keys(bookmarks).length;
-    document.getElementById('bookmark-count').textContent = c > 0 ? `${c} bookmarked` : '';
-  }
+  function updateBookmarkCount() { const c = Object.keys(bookmarks).length; document.getElementById('bookmark-count').textContent = c > 0 ? `${c} bookmarked` : ''; }
   function showError(msg) { const el = document.getElementById('error-banner'); el.textContent = msg; el.style.display = 'block'; }
   function hideError() { document.getElementById('error-banner').style.display = 'none'; }
 </script>
