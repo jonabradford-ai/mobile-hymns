@@ -7,64 +7,32 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f5f5f7; --card: #ffffff; --primary: #1a73e8;
+    --bg: #f5f5f7; --card: #fff; --primary: #1a73e8;
     --text: #1d1d1f; --muted: #6e6e73;
     --border: #d2d2d7; --danger: #d93025; --radius: 12px;
   }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh; display: flex; flex-direction: column;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
   .screen { display: none; flex-direction: column; flex: 1; opacity: 0; transition: opacity 0.2s ease; }
   .screen.active { display: flex; }
   .screen.visible { opacity: 1; }
-  .topbar {
-    background: var(--card); border-bottom: 1px solid var(--border);
-    padding: 12px 16px; display: flex; align-items: center; gap: 12px;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .topbar h1 { font-size: 17px; font-weight: 600; flex: 1; }
-  .icon-btn {
-    background: none; border: none; cursor: pointer; padding: 6px;
-    border-radius: 8px; color: var(--primary); font-size: 22px; line-height: 1;
-    display: flex; align-items: center; justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .topbar h1 { font-size: 17px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--primary); font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
   .search-bar { padding: 10px 16px 0; background: var(--card); }
-  .search-bar input {
-    width: 100%; border: 1px solid var(--border); border-radius: 50px;
-    padding: 10px 16px; font-size: 15px; outline: none; background: var(--bg);
-  }
+  .search-bar input { width: 100%; border: 1px solid var(--border); border-radius: 50px; padding: 10px 16px; font-size: 15px; outline: none; background: var(--bg); }
   .search-bar input:focus { border-color: var(--primary); background: #fff; }
-  .filter-bar {
-    padding: 10px 16px 12px; background: var(--card);
-    border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center;
-  }
-  .filter-btn {
-    padding: 7px 14px; border-radius: 50px; font-size: 13px; font-weight: 600;
-    border: 1.5px solid var(--border); background: var(--bg); color: var(--muted);
-    cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
-  }
+  .filter-bar { padding: 10px 16px 12px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+  .filter-btn { padding: 7px 14px; border-radius: 50px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
   .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
   .bookmark-count { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
   .list-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .slide-card {
-    background: var(--card); border-radius: var(--radius); padding: 14px 16px;
-    display: flex; align-items: center; gap: 12px; cursor: pointer;
-    border: 1px solid transparent; transition: border-color .15s, box-shadow .15s;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .slide-card { background: var(--card); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid transparent; -webkit-tap-highlight-color: transparent; }
   .slide-card:active { border-color: var(--primary); box-shadow: 0 2px 8px rgba(26,115,232,.12); }
   .slide-icon { width: 40px; height: 40px; border-radius: 10px; background: #e8f0fe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
   .slide-info { flex: 1; min-width: 0; }
   .slide-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .slide-arrow { color: var(--border); font-size: 18px; flex-shrink: 0; margin-left: 4px; }
-  .bookmark-btn {
-    background: none; border: none; cursor: pointer; padding: 4px 6px;
-    flex-shrink: 0; display: flex; align-items: center;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .bookmark-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; flex-shrink: 0; display: flex; align-items: center; -webkit-tap-highlight-color: transparent; }
   .bookmark-btn svg { width: 22px; height: 22px; transition: fill .15s, stroke .15s; }
   .bookmark-btn.bookmarked svg { fill: var(--primary); stroke: var(--primary); }
   .bookmark-btn:not(.bookmarked) svg { fill: none; stroke: #bbb; }
@@ -77,37 +45,18 @@
   .error-banner { margin: 12px 16px; background: #fce8e6; border-radius: var(--radius); padding: 12px 16px; font-size: 14px; color: var(--danger); display: none; }
   #viewer-screen { background: #000; }
   #viewer-screen .topbar { background: #1a1a1a; border-color: #333; }
-  #viewer-screen .topbar h1 { color: #fff; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #viewer-screen .topbar h1 { color: #fff; font-size: 15px; }
   #viewer-screen .icon-btn { color: #aaa; }
-  .viewer-body { flex: 1; position: relative; background: #111; overflow: hidden; }
-  .slide-frame {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    border: none; opacity: 0; transition: opacity 0.4s ease; background: #000;
-  }
-  .slide-frame.visible { opacity: 1; }
-  .frame-overlay {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: #111; opacity: 0;
-    transition: opacity 0.2s ease; pointer-events: none; z-index: 10;
-  }
-  .frame-overlay.show { opacity: 1; }
-  .frame-overlay .spinner { border-color: #444; border-top-color: #888; }
-  .slide-nav {
-    background: #1a1a1a; border-top: 1px solid #333;
-    padding: 10px 24px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  }
-  .nav-btn {
-    background: #2c2c2e; border: none; color: #fff; font-size: 30px;
-    width: 60px; height: 60px; border-radius: 50%; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .15s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
-  }
+  .viewer-body { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .slide-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease; }
+  .slide-img.visible { opacity: 1; }
+  .img-spinner { position: absolute; width: 36px; height: 36px; border: 3px solid #333; border-top-color: #888; border-radius: 50%; animation: spin .7s linear infinite; z-index: 5; pointer-events: none; transition: opacity 0.2s; }
+  .img-spinner.hidden { opacity: 0; }
+  .slide-nav { background: #1a1a1a; border-top: 1px solid #333; padding: 10px 24px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .nav-btn { background: #2c2c2e; border: none; color: #fff; font-size: 30px; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; flex-shrink: 0; transition: background .1s, opacity .1s; }
   .nav-btn:active { background: #48484a; }
-  .nav-btn:disabled { opacity: 0.2; }
-  .slide-counter { color: #e0e0e0; font-size: 15px; font-weight: 600; text-align: center; min-width: 100px; }
+  .nav-btn:disabled { opacity: 0.2; pointer-events: none; }
+  .slide-counter { color: #e0e0e0; font-size: 15px; font-weight: 600; text-align: center; min-width: 110px; }
   .slide-counter.pending { color: #555; }
 </style>
 </head>
@@ -138,9 +87,9 @@
     <h1 id="viewer-title"></h1>
   </div>
   <div class="viewer-body">
-    <div class="frame-overlay" id="frame-overlay"><div class="spinner"></div></div>
-    <iframe class="slide-frame" id="frame-a" allowfullscreen allow="autoplay"></iframe>
-    <iframe class="slide-frame" id="frame-b" allowfullscreen allow="autoplay"></iframe>
+    <div class="img-spinner" id="img-spinner"></div>
+    <img class="slide-img" id="slide-img-a" />
+    <img class="slide-img" id="slide-img-b" />
   </div>
   <div class="slide-nav">
     <button class="nav-btn" id="prev-btn" onclick="prevSlide()" disabled>‹</button>
@@ -157,10 +106,11 @@
   let showOnlyBookmarked = false;
   let bookmarks = JSON.parse(localStorage.getItem('hymn_bookmarks') || '{}');
   let slideObjectIds = [];
+  let thumbnailCache = {};
   let currentSlide = 1;
   let totalSlides = 0;
-  let currentPresentationId = null;
-  let activeFrame = 'a';
+  let currentPresId = null;
+  let activeImg = 'a';
   let navigating = false;
 
   const BOOKMARK_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
@@ -169,19 +119,14 @@
   loadSlides();
 
   function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'visible'));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','visible'));
     const el = document.getElementById(id);
     el.classList.add('active');
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
   }
 
   function showList() {
-    document.getElementById('frame-a').src = '';
-    document.getElementById('frame-b').src = '';
-    document.getElementById('frame-a').classList.remove('visible');
-    document.getElementById('frame-b').classList.remove('visible');
-    currentPresentationId = null;
-    slideObjectIds = [];
+    currentPresId = null; slideObjectIds = []; thumbnailCache = {};
     showScreen('list-screen');
   }
 
@@ -198,20 +143,100 @@
     try {
       const res = await fetch(url);
       const data = await res.json();
-      if (data.error) { showError('Error: ' + data.error.message); document.getElementById('list-body').innerHTML = ''; return; }
+      if (data.error) { showError('Drive API error: ' + data.error.message); document.getElementById('list-body').innerHTML = ''; return; }
       allSlides = data.files || [];
       renderSlides(getFilteredSlides());
       updateBookmarkCount();
     } catch(e) { showError('Network error: ' + e.message); document.getElementById('list-body').innerHTML = ''; }
   }
 
-  async function fetchSlideIds(presentationId) {
+  async function fetchSlideObjectIds(presId) {
+    const res = await fetch(`https://slides.googleapis.com/v1/presentations/${presId}?fields=slides.objectId&key=${encodeURIComponent(API_KEY)}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.slides.map(s => s.objectId);
+  }
+
+  async function fetchThumbnail(presId, objectId) {
+    const url = `https://slides.googleapis.com/v1/presentations/${presId}/pages/${objectId}/thumbnail?thumbnailProperties.mimeType=PNG&thumbnailProperties.thumbnailSize=LARGE&key=${encodeURIComponent(API_KEY)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.contentUrl;
+  }
+
+  async function openSlide(id, name, mimeType) {
+    currentPresId = id; currentSlide = 1; totalSlides = 0;
+    slideObjectIds = []; thumbnailCache = {}; navigating = false; activeImg = 'a';
+    document.getElementById('viewer-title').textContent = name;
+    document.getElementById('slide-img-a').classList.remove('visible');
+    document.getElementById('slide-img-b').classList.remove('visible');
+    document.getElementById('slide-img-a').src = '';
+    document.getElementById('slide-img-b').src = '';
+    setSpinner(true); updateCounter();
+    showScreen('viewer-screen');
     try {
-      const res = await fetch(`https://slides.googleapis.com/v1/presentations/${presentationId}?fields=slides.objectId&key=${encodeURIComponent(API_KEY)}`);
-      const data = await res.json();
-      if (data.slides) return data.slides.map(s => s.objectId);
-    } catch(e) {}
-    return null;
+      const ids = await fetchSlideObjectIds(id);
+      slideObjectIds = ids; totalSlides = ids.length; updateCounter();
+      await showSlideImage(1, 'a', true);
+      if (totalSlides > 1) prefetch(2);
+    } catch(e) {
+      setSpinner(false);
+      showError('Slides API error: ' + e.message + ' — Enable Google Slides API in Google Cloud Console.');
+    }
+  }
+
+  async function showSlideImage(slideNum, imgId, initial) {
+    setSpinner(true); navigating = true; updateNavButtons();
+    try {
+      if (!thumbnailCache[slideNum]) {
+        thumbnailCache[slideNum] = await fetchThumbnail(currentPresId, slideObjectIds[slideNum - 1]);
+      }
+      const img = document.getElementById('slide-img-' + imgId);
+      const other = imgId === 'a' ? 'b' : 'a';
+      await loadImage(img, thumbnailCache[slideNum]);
+      setSpinner(false);
+      img.classList.add('visible');
+      if (!initial) document.getElementById('slide-img-' + other).classList.remove('visible');
+      activeImg = imgId; navigating = false; updateNavButtons();
+      const next = slideNum + 1;
+      if (next <= totalSlides && !thumbnailCache[next]) prefetch(next);
+    } catch(e) { setSpinner(false); navigating = false; updateNavButtons(); }
+  }
+
+  function loadImage(imgEl, url) {
+    return new Promise((resolve, reject) => { imgEl.onload = resolve; imgEl.onerror = reject; imgEl.src = url; });
+  }
+
+  async function prefetch(slideNum) {
+    if (thumbnailCache[slideNum] || !slideObjectIds[slideNum-1]) return;
+    try { thumbnailCache[slideNum] = await fetchThumbnail(currentPresId, slideObjectIds[slideNum-1]); } catch(e) {}
+  }
+
+  async function prevSlide() {
+    if (navigating || currentSlide <= 1) return;
+    currentSlide--; updateCounter();
+    await showSlideImage(currentSlide, activeImg === 'a' ? 'b' : 'a', false);
+  }
+
+  async function nextSlide() {
+    if (navigating || (totalSlides > 0 && currentSlide >= totalSlides)) return;
+    currentSlide++; updateCounter();
+    await showSlideImage(currentSlide, activeImg === 'a' ? 'b' : 'a', false);
+  }
+
+  function setSpinner(show) { document.getElementById('img-spinner').classList.toggle('hidden', !show); }
+
+  function updateCounter() {
+    const el = document.getElementById('slide-counter');
+    if (totalSlides > 0) { el.textContent = `Slide ${currentSlide} of ${totalSlides}`; el.classList.remove('pending'); }
+    else { el.textContent = '—'; el.classList.add('pending'); }
+    updateNavButtons();
+  }
+
+  function updateNavButtons() {
+    document.getElementById('prev-btn').disabled = navigating || currentSlide <= 1;
+    document.getElementById('next-btn').disabled = navigating || (totalSlides > 0 && currentSlide >= totalSlides);
   }
 
   function renderSlides(slides) {
@@ -239,7 +264,6 @@
   }
 
   function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
   function getFilteredSlides() {
     const q = document.getElementById('search-input').value.toLowerCase();
     let s = allSlides;
@@ -272,82 +296,6 @@
     const c = Object.keys(bookmarks).length;
     document.getElementById('bookmark-count').textContent = c > 0 ? `${c} bookmarked` : '';
   }
-
-  async function openSlide(id, name, mimeType) {
-    currentPresentationId = id;
-    currentSlide = 1;
-    totalSlides = 0;
-    slideObjectIds = [];
-    navigating = false;
-    activeFrame = 'a';
-    document.getElementById('viewer-title').textContent = name;
-    document.getElementById('frame-a').classList.remove('visible');
-    document.getElementById('frame-b').classList.remove('visible');
-    document.getElementById('frame-a').src = '';
-    document.getElementById('frame-b').src = '';
-    showOverlay(true);
-    updateCounter();
-    showScreen('viewer-screen');
-    if (mimeType === 'application/vnd.google-apps.presentation') {
-      const ids = await fetchSlideIds(id);
-      if (ids && ids.length) { slideObjectIds = ids; totalSlides = ids.length; updateCounter(); }
-    }
-    setTimeout(() => loadSlideIntoFrame('a', 1, true), 350);
-  }
-
-  function embedUrlForSlide(slideNum) {
-    const base = `https://docs.google.com/presentation/d/${currentPresentationId}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
-    if (slideObjectIds.length >= slideNum) return base + `&slide=id.${slideObjectIds[slideNum - 1]}`;
-    return base;
-  }
-
-  function loadSlideIntoFrame(frameId, slideNum, initialLoad) {
-    const frame = document.getElementById('frame-' + frameId);
-    const onLoad = () => {
-      frame.removeEventListener('load', onLoad);
-      setTimeout(() => {
-        showOverlay(false);
-        const other = frameId === 'a' ? 'b' : 'a';
-        frame.classList.add('visible');
-        if (!initialLoad) document.getElementById('frame-' + other).classList.remove('visible');
-        activeFrame = frameId;
-        navigating = false;
-        updateNavButtons();
-      }, 250);
-    };
-    frame.addEventListener('load', onLoad);
-    frame.src = embedUrlForSlide(slideNum);
-  }
-
-  function prevSlide() {
-    if (navigating || currentSlide <= 1) return;
-    currentSlide--; navigate();
-  }
-  function nextSlide() {
-    if (navigating) return;
-    if (totalSlides > 0 && currentSlide >= totalSlides) return;
-    currentSlide++; navigate();
-  }
-  function navigate() {
-    navigating = true;
-    updateCounter(); updateNavButtons(); showOverlay(true);
-    const nextFrame = activeFrame === 'a' ? 'b' : 'a';
-    loadSlideIntoFrame(nextFrame, currentSlide, false);
-  }
-
-  function showOverlay(show) { document.getElementById('frame-overlay').classList.toggle('show', show); }
-
-  function updateCounter() {
-    const el = document.getElementById('slide-counter');
-    if (totalSlides > 0) { el.textContent = `Slide ${currentSlide} of ${totalSlides}`; el.classList.remove('pending'); }
-    else { el.textContent = currentSlide > 1 ? `Slide ${currentSlide}` : '—'; el.classList.add('pending'); }
-    updateNavButtons();
-  }
-  function updateNavButtons() {
-    document.getElementById('prev-btn').disabled = navigating || currentSlide <= 1;
-    document.getElementById('next-btn').disabled = navigating || (totalSlides > 0 && currentSlide >= totalSlides);
-  }
-
   function showError(msg) { const el = document.getElementById('error-banner'); el.textContent = msg; el.style.display = 'block'; }
   function hideError() { document.getElementById('error-banner').style.display = 'none'; }
 </script>
