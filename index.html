@@ -8,32 +8,63 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #f5f5f7; --card: #ffffff; --primary: #1a73e8;
-    --primary-dark: #1557b0; --text: #1d1d1f; --muted: #6e6e73;
+    --text: #1d1d1f; --muted: #6e6e73;
     --border: #d2d2d7; --danger: #d93025; --radius: 12px;
   }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-  .screen { display: none; flex-direction: column; flex: 1; opacity: 0; transition: opacity 0.25s ease; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  .screen { display: none; flex-direction: column; flex: 1; opacity: 0; transition: opacity 0.2s ease; }
   .screen.active { display: flex; }
   .screen.visible { opacity: 1; }
-  .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .topbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+  }
   .topbar h1 { font-size: 17px; font-weight: 600; flex: 1; }
-  .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--primary); font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; text-decoration: none; -webkit-tap-highlight-color: transparent; }
-  .icon-btn:hover { background: var(--bg); }
+  .icon-btn {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    border-radius: 8px; color: var(--primary); font-size: 22px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
   .search-bar { padding: 10px 16px 0; background: var(--card); }
-  .search-bar input { width: 100%; border: 1px solid var(--border); border-radius: 50px; padding: 10px 16px; font-size: 15px; outline: none; background: var(--bg); }
+  .search-bar input {
+    width: 100%; border: 1px solid var(--border); border-radius: 50px;
+    padding: 10px 16px; font-size: 15px; outline: none; background: var(--bg);
+  }
   .search-bar input:focus { border-color: var(--primary); background: #fff; }
-  .filter-bar { padding: 10px 16px 12px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
-  .filter-btn { padding: 7px 14px; border-radius: 50px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .filter-bar {
+    padding: 10px 16px 12px; background: var(--card);
+    border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center;
+  }
+  .filter-btn {
+    padding: 7px 14px; border-radius: 50px; font-size: 13px; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--muted);
+    cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
+  }
   .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
   .bookmark-count { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
   .list-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .slide-card { background: var(--card); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid transparent; transition: border-color .15s, box-shadow .15s; -webkit-tap-highlight-color: transparent; }
-  .slide-card:hover, .slide-card:active { border-color: var(--primary); box-shadow: 0 2px 8px rgba(26,115,232,.12); }
+  .slide-card {
+    background: var(--card); border-radius: var(--radius); padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    border: 1px solid transparent; transition: border-color .15s, box-shadow .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .slide-card:active { border-color: var(--primary); box-shadow: 0 2px 8px rgba(26,115,232,.12); }
   .slide-icon { width: 40px; height: 40px; border-radius: 10px; background: #e8f0fe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
   .slide-info { flex: 1; min-width: 0; }
   .slide-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .slide-arrow { color: var(--border); font-size: 18px; flex-shrink: 0; margin-left: 4px; }
-  .bookmark-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; flex-shrink: 0; line-height: 1; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; }
+  .bookmark-btn {
+    background: none; border: none; cursor: pointer; padding: 4px 6px;
+    flex-shrink: 0; display: flex; align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
   .bookmark-btn svg { width: 22px; height: 22px; transition: fill .15s, stroke .15s; }
   .bookmark-btn.bookmarked svg { fill: var(--primary); stroke: var(--primary); }
   .bookmark-btn:not(.bookmarked) svg { fill: none; stroke: #bbb; }
@@ -46,21 +77,38 @@
   .error-banner { margin: 12px 16px; background: #fce8e6; border-radius: var(--radius); padding: 12px 16px; font-size: 14px; color: var(--danger); display: none; }
   #viewer-screen { background: #000; }
   #viewer-screen .topbar { background: #1a1a1a; border-color: #333; }
-  #viewer-screen .topbar h1 { color: #fff; font-size: 15px; }
+  #viewer-screen .topbar h1 { color: #fff; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #viewer-screen .icon-btn { color: #aaa; }
-  #viewer-screen .icon-btn:active { background: #333; }
-  .viewer-body { flex: 1; position: relative; background: #000; overflow: hidden; }
-  #slide-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.35s ease; }
-  #slide-frame.loaded { opacity: 1; }
-  .frame-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; gap: 12px; font-size: 15px; background: #111; transition: opacity 0.35s ease; pointer-events: none; }
-  .frame-placeholder.hidden { opacity: 0; }
-  .frame-placeholder .spinner { border-color: #444; border-top-color: #888; }
-  .slide-nav { background: #1a1a1a; border-top: 1px solid #333; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-btn { background: #333; border: none; color: #fff; font-size: 28px; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; -webkit-tap-highlight-color: transparent; flex-shrink: 0; line-height: 1; }
-  .nav-btn:active { background: #555; }
-  .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-  .slide-counter { color: #ccc; font-size: 15px; font-weight: 600; text-align: center; min-width: 90px; }
-  .slide-counter.pending { color: #555; font-size: 13px; }
+  .viewer-body { flex: 1; position: relative; background: #111; overflow: hidden; }
+  .slide-frame {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    border: none; opacity: 0; transition: opacity 0.4s ease; background: #000;
+  }
+  .slide-frame.visible { opacity: 1; }
+  .frame-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #111; opacity: 0;
+    transition: opacity 0.2s ease; pointer-events: none; z-index: 10;
+  }
+  .frame-overlay.show { opacity: 1; }
+  .frame-overlay .spinner { border-color: #444; border-top-color: #888; }
+  .slide-nav {
+    background: #1a1a1a; border-top: 1px solid #333;
+    padding: 10px 24px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .nav-btn {
+    background: #2c2c2e; border: none; color: #fff; font-size: 30px;
+    width: 60px; height: 60px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+  }
+  .nav-btn:active { background: #48484a; }
+  .nav-btn:disabled { opacity: 0.2; }
+  .slide-counter { color: #e0e0e0; font-size: 15px; font-weight: 600; text-align: center; min-width: 100px; }
+  .slide-counter.pending { color: #555; }
 </style>
 </head>
 <body>
@@ -90,15 +138,13 @@
     <h1 id="viewer-title"></h1>
   </div>
   <div class="viewer-body">
-    <div class="frame-placeholder" id="frame-placeholder">
-      <div class="spinner"></div>
-      <span>Loading…</span>
-    </div>
-    <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
+    <div class="frame-overlay" id="frame-overlay"><div class="spinner"></div></div>
+    <iframe class="slide-frame" id="frame-a" allowfullscreen allow="autoplay"></iframe>
+    <iframe class="slide-frame" id="frame-b" allowfullscreen allow="autoplay"></iframe>
   </div>
   <div class="slide-nav">
     <button class="nav-btn" id="prev-btn" onclick="prevSlide()" disabled>‹</button>
-    <div class="slide-counter pending" id="slide-counter">Loading…</div>
+    <div class="slide-counter pending" id="slide-counter">—</div>
     <button class="nav-btn" id="next-btn" onclick="nextSlide()" disabled>›</button>
   </div>
 </div>
@@ -109,14 +155,15 @@
 
   let allSlides = [];
   let showOnlyBookmarked = false;
+  let bookmarks = JSON.parse(localStorage.getItem('hymn_bookmarks') || '{}');
+  let slideObjectIds = [];
   let currentSlide = 1;
   let totalSlides = 0;
   let currentPresentationId = null;
-  let bookmarks = JSON.parse(localStorage.getItem('hymn_bookmarks') || '{}');
+  let activeFrame = 'a';
+  let navigating = false;
 
-  const BOOKMARK_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-  </svg>`;
+  const BOOKMARK_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 
   showScreen('list-screen');
   loadSlides();
@@ -129,11 +176,12 @@
   }
 
   function showList() {
-    const frame = document.getElementById('slide-frame');
-    frame.classList.remove('loaded');
-    frame.src = '';
-    document.getElementById('frame-placeholder').classList.remove('hidden');
+    document.getElementById('frame-a').src = '';
+    document.getElementById('frame-b').src = '';
+    document.getElementById('frame-a').classList.remove('visible');
+    document.getElementById('frame-b').classList.remove('visible');
     currentPresentationId = null;
+    slideObjectIds = [];
     showScreen('list-screen');
   }
 
@@ -154,17 +202,14 @@
       allSlides = data.files || [];
       renderSlides(getFilteredSlides());
       updateBookmarkCount();
-    } catch(e) {
-      showError('Network error: ' + e.message);
-      document.getElementById('list-body').innerHTML = '';
-    }
+    } catch(e) { showError('Network error: ' + e.message); document.getElementById('list-body').innerHTML = ''; }
   }
 
-  async function fetchSlideCount(id) {
+  async function fetchSlideIds(presentationId) {
     try {
-      const res = await fetch(`https://slides.googleapis.com/v1/presentations/${id}?fields=slides&key=${encodeURIComponent(API_KEY)}`);
+      const res = await fetch(`https://slides.googleapis.com/v1/presentations/${presentationId}?fields=slides.objectId&key=${encodeURIComponent(API_KEY)}`);
       const data = await res.json();
-      if (data.slides) return data.slides.length;
+      if (data.slides) return data.slides.map(s => s.objectId);
     } catch(e) {}
     return null;
   }
@@ -185,135 +230,122 @@
       card.innerHTML = `
         <div class="slide-icon">🎵</div>
         <div class="slide-info"><div class="slide-name">${escHtml(s.name)}</div></div>
-        <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-id="${s.id}">${BOOKMARK_SVG}</button>
+        <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}">${BOOKMARK_SVG}</button>
         <div class="slide-arrow">›</div>`;
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.bookmark-btn')) return;
-        openSlide(s.id, s.name, s.mimeType);
-      });
-      card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleBookmark(s.id, e.currentTarget);
-      });
+      card.addEventListener('click', e => { if (!e.target.closest('.bookmark-btn')) openSlide(s.id, s.name, s.mimeType); });
+      card.querySelector('.bookmark-btn').addEventListener('click', e => { e.stopPropagation(); toggleBookmark(s.id, e.currentTarget); });
       body.appendChild(card);
     });
   }
 
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function getFilteredSlides() {
     const q = document.getElementById('search-input').value.toLowerCase();
-    let slides = allSlides;
-    if (showOnlyBookmarked) slides = slides.filter(s => bookmarks[s.id]);
-    if (q) slides = slides.filter(s => s.name.toLowerCase().includes(q));
-    return slides;
+    let s = allSlides;
+    if (showOnlyBookmarked) s = s.filter(x => bookmarks[x.id]);
+    if (q) s = s.filter(x => x.name.toLowerCase().includes(q));
+    return s;
   }
-
   function filterSlides() { renderSlides(getFilteredSlides()); }
-
   function toggleBookmarkFilter() {
     showOnlyBookmarked = !showOnlyBookmarked;
     document.getElementById('bookmark-filter-btn').classList.toggle('active', showOnlyBookmarked);
     renderSlides(getFilteredSlides());
   }
-
   function resetBookmarks() {
     if (!Object.keys(bookmarks).length) return;
     if (!confirm('Remove all bookmarks?')) return;
-    bookmarks = {};
-    saveBookmarks();
-    updateBookmarkCount();
+    bookmarks = {}; saveBookmarks(); updateBookmarkCount();
     showOnlyBookmarked = false;
     document.getElementById('bookmark-filter-btn').classList.remove('active');
     renderSlides(getFilteredSlides());
   }
-
   function toggleBookmark(id, btn) {
-    if (bookmarks[id]) {
-      delete bookmarks[id];
-      btn.classList.remove('bookmarked');
-    } else {
-      bookmarks[id] = true;
-      btn.classList.add('bookmarked');
-    }
-    saveBookmarks();
-    updateBookmarkCount();
+    if (bookmarks[id]) { delete bookmarks[id]; btn.classList.remove('bookmarked'); }
+    else { bookmarks[id] = true; btn.classList.add('bookmarked'); }
+    saveBookmarks(); updateBookmarkCount();
     if (showOnlyBookmarked) renderSlides(getFilteredSlides());
   }
-
   function saveBookmarks() { localStorage.setItem('hymn_bookmarks', JSON.stringify(bookmarks)); }
-
   function updateBookmarkCount() {
-    const count = Object.keys(bookmarks).length;
-    document.getElementById('bookmark-count').textContent = count > 0 ? `${count} bookmarked` : '';
+    const c = Object.keys(bookmarks).length;
+    document.getElementById('bookmark-count').textContent = c > 0 ? `${c} bookmarked` : '';
   }
 
   async function openSlide(id, name, mimeType) {
     currentPresentationId = id;
     currentSlide = 1;
     totalSlides = 0;
+    slideObjectIds = [];
+    navigating = false;
+    activeFrame = 'a';
     document.getElementById('viewer-title').textContent = name;
-    resetFrame();
+    document.getElementById('frame-a').classList.remove('visible');
+    document.getElementById('frame-b').classList.remove('visible');
+    document.getElementById('frame-a').src = '';
+    document.getElementById('frame-b').src = '';
+    showOverlay(true);
     updateCounter();
     showScreen('viewer-screen');
-    setTimeout(() => loadFrame(1), 300);
     if (mimeType === 'application/vnd.google-apps.presentation') {
-      fetchSlideCount(id).then(count => {
-        if (count) { totalSlides = count; updateCounter(); }
-      });
+      const ids = await fetchSlideIds(id);
+      if (ids && ids.length) { slideObjectIds = ids; totalSlides = ids.length; updateCounter(); }
     }
+    setTimeout(() => loadSlideIntoFrame('a', 1, true), 350);
   }
 
-  function embedUrl(slideNum) {
-    return `https://docs.google.com/presentation/d/${currentPresentationId}/embed?start=false&loop=false&delayms=99999&rm=minimal&slide=id.p${slideNum}`;
+  function embedUrlForSlide(slideNum) {
+    const base = `https://docs.google.com/presentation/d/${currentPresentationId}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
+    if (slideObjectIds.length >= slideNum) return base + `&slide=id.${slideObjectIds[slideNum - 1]}`;
+    return base;
   }
 
-  function loadFrame(slideNum) {
-    const frame = document.getElementById('slide-frame');
-    frame.classList.remove('loaded');
-    document.getElementById('frame-placeholder').classList.remove('hidden');
-    frame.src = embedUrl(slideNum);
-  }
-
-  function resetFrame() {
-    const frame = document.getElementById('slide-frame');
-    frame.classList.remove('loaded');
-    frame.src = '';
-    document.getElementById('frame-placeholder').classList.remove('hidden');
-  }
-
-  function onFrameLoad() {
-    document.getElementById('slide-frame').classList.add('loaded');
-    document.getElementById('frame-placeholder').classList.add('hidden');
+  function loadSlideIntoFrame(frameId, slideNum, initialLoad) {
+    const frame = document.getElementById('frame-' + frameId);
+    const onLoad = () => {
+      frame.removeEventListener('load', onLoad);
+      setTimeout(() => {
+        showOverlay(false);
+        const other = frameId === 'a' ? 'b' : 'a';
+        frame.classList.add('visible');
+        if (!initialLoad) document.getElementById('frame-' + other).classList.remove('visible');
+        activeFrame = frameId;
+        navigating = false;
+        updateNavButtons();
+      }, 250);
+    };
+    frame.addEventListener('load', onLoad);
+    frame.src = embedUrlForSlide(slideNum);
   }
 
   function prevSlide() {
-    if (currentSlide <= 1) return;
-    currentSlide--;
-    updateCounter();
-    loadFrame(currentSlide);
+    if (navigating || currentSlide <= 1) return;
+    currentSlide--; navigate();
+  }
+  function nextSlide() {
+    if (navigating) return;
+    if (totalSlides > 0 && currentSlide >= totalSlides) return;
+    currentSlide++; navigate();
+  }
+  function navigate() {
+    navigating = true;
+    updateCounter(); updateNavButtons(); showOverlay(true);
+    const nextFrame = activeFrame === 'a' ? 'b' : 'a';
+    loadSlideIntoFrame(nextFrame, currentSlide, false);
   }
 
-  function nextSlide() {
-    if (totalSlides > 0 && currentSlide >= totalSlides) return;
-    currentSlide++;
-    updateCounter();
-    loadFrame(currentSlide);
-  }
+  function showOverlay(show) { document.getElementById('frame-overlay').classList.toggle('show', show); }
 
   function updateCounter() {
     const el = document.getElementById('slide-counter');
-    if (totalSlides > 0) {
-      el.textContent = `Slide ${currentSlide} of ${totalSlides}`;
-      el.classList.remove('pending');
-    } else {
-      el.textContent = `Slide ${currentSlide}…`;
-      el.classList.add('pending');
-    }
-    document.getElementById('prev-btn').disabled = currentSlide <= 1;
-    document.getElementById('next-btn').disabled = totalSlides > 0 && currentSlide >= totalSlides;
+    if (totalSlides > 0) { el.textContent = `Slide ${currentSlide} of ${totalSlides}`; el.classList.remove('pending'); }
+    else { el.textContent = currentSlide > 1 ? `Slide ${currentSlide}` : '—'; el.classList.add('pending'); }
+    updateNavButtons();
+  }
+  function updateNavButtons() {
+    document.getElementById('prev-btn').disabled = navigating || currentSlide <= 1;
+    document.getElementById('next-btn').disabled = navigating || (totalSlides > 0 && currentSlide >= totalSlides);
   }
 
   function showError(msg) { const el = document.getElementById('error-banner'); el.textContent = msg; el.style.display = 'block'; }
