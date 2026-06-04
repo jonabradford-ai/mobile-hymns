@@ -63,8 +63,7 @@
     padding-top: max(12px, env(safe-area-inset-top));
     display: flex; align-items: center; gap: 12px;
     flex-shrink: 0;
-    position: relative;
-    z-index: 30;
+    z-index: 10;
   }
   #viewer-topbar h2 { font-size: 15px; font-weight: 600; color: #fff; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #back-btn { background: none; border: none; color: #aaa; font-size: 15px; cursor: pointer; padding: 4px 8px; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
@@ -74,7 +73,6 @@
     width: 100%;
     border: none;
     background: #000;
-    pointer-events: none; /* gesture-layer handles ALL touch input */
   }
 
   #viewer-loading {
@@ -83,52 +81,16 @@
     top: 52px;
     background: #111;
     display: flex; align-items: center; justify-content: center;
-    z-index: 10;
-    transition: opacity 0.3s;
+    z-index: 5;
+    pointer-events: none;
   }
   #viewer-loading .spinner { border-color: #444; border-top-color: #888; }
   #viewer-loading.hidden { display: none; }
 
-  #gesture-layer {
-    position: absolute;
-    inset: 0;
-    top: 52px;
-    z-index: 20;
-    background: transparent;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: none;
-  }
-
-  .flash {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(255,255,255,0.2); border-radius: 50%;
-    width: 72px; height: 72px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 34px; color: #fff; pointer-events: none;
-    opacity: 0; transition: opacity 0.1s;
-  }
-  .flash.left { left: 16px; }
-  .flash.right { right: 16px; }
-  .flash.show { opacity: 1; }
-
-  #counter {
-    background: #1a1a1a;
-    border-top: 1px solid #222;
-    padding: 6px 16px;
-    padding-bottom: max(6px, env(safe-area-inset-bottom));
-    text-align: center;
-    color: #555;
-    font-size: 12px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 30;
-  }
-
+  /* Landscape: hide topbar, iframe fills full screen */
   @media (orientation: landscape) {
     #viewer-topbar { display: none; }
-    #counter { display: none; }
     #viewer-loading { top: 0; }
-    #gesture-layer { top: 0; }
   }
 </style>
 </head>
@@ -161,12 +123,7 @@
     <h2 id="viewer-title"></h2>
   </div>
   <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
-  <div id="counter">Slide 1</div>
   <div id="viewer-loading"><div class="spinner"></div></div>
-  <div id="gesture-layer">
-    <div class="flash left" id="flash-left">‹</div>
-    <div class="flash right" id="flash-right">›</div>
-  </div>
 </div>
 
 <script>
@@ -175,17 +132,13 @@
 
   let allSlides = [], showOnlyBookmarked = false;
   let bookmarks = JSON.parse(localStorage.getItem('hymn_bookmarks') || '{}');
-  let currentSlide = 1, currentPresId = null;
 
   const BOOKMARK_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 
   loadSlides();
-  setupGestures();
 
   function openViewer(id, name) {
-    currentPresId = id; currentSlide = 1;
     document.getElementById('viewer-title').textContent = name;
-    document.getElementById('counter').textContent = 'Slide 1';
     document.getElementById('viewer-loading').classList.remove('hidden');
     document.getElementById('viewer').classList.add('open');
     setTimeout(() => {
@@ -197,87 +150,12 @@
   function closeViewer() {
     document.getElementById('viewer').classList.remove('open');
     document.getElementById('slide-frame').src = 'about:blank';
-    currentPresId = null;
   }
 
   function onFrameLoad() {
     const src = document.getElementById('slide-frame').src;
     if (!src || src === 'about:blank') return;
     document.getElementById('viewer-loading').classList.add('hidden');
-  }
-
-  function prevSlide() {
-    if (currentSlide <= 1) return;
-    currentSlide--;
-    document.getElementById('counter').textContent = `Slide ${currentSlide}`;
-    flash('left');
-    reloadFrame();
-  }
-
-  function nextSlide() {
-    currentSlide++;
-    document.getElementById('counter').textContent = `Slide ${currentSlide}`;
-    flash('right');
-    reloadFrame();
-  }
-
-  function reloadFrame() {
-    document.getElementById('viewer-loading').classList.remove('hidden');
-    document.getElementById('slide-frame').src =
-      `https://docs.google.com/presentation/d/${currentPresId}/embed?start=false&loop=false&delayms=99999&rm=minimal&slide=id.p${currentSlide}`;
-  }
-
-  function flash(side) {
-    const el = document.getElementById('flash-' + side);
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 250);
-  }
-
-  function setupGestures() {
-    const layer = document.getElementById('gesture-layer');
-    let x0 = 0, y0 = 0, t0 = 0;
-
-    layer.addEventListener('touchstart', e => {
-      x0 = e.touches[0].clientX;
-      y0 = e.touches[0].clientY;
-      t0 = Date.now();
-      e.preventDefault();
-      e.stopPropagation();
-    }, { passive: false });
-
-    layer.addEventListener('touchmove', e => {
-      e.preventDefault();
-      e.stopPropagation();
-    }, { passive: false });
-
-    layer.addEventListener('touchend', e => {
-      const x1 = e.changedTouches[0].clientX;
-      const y1 = e.changedTouches[0].clientY;
-      const dx = x1 - x0, dy = y1 - y0;
-      const dt = Date.now() - t0;
-      const ax = Math.abs(dx), ay = Math.abs(dy);
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (ax < 14 && ay < 14 && dt < 300) {
-        const w = window.innerWidth;
-        if (x1 < w * 0.4) prevSlide();
-        else if (x1 > w * 0.6) nextSlide();
-        return;
-      }
-
-      if (ax > 30 && ax > ay * 1.2 && dt < 500) {
-        if (dx < 0) nextSlide();
-        else prevSlide();
-      }
-    }, { passive: false });
-
-    layer.addEventListener('click', e => {
-      const w = window.innerWidth;
-      if (e.clientX < w * 0.4) prevSlide();
-      else if (e.clientX > w * 0.6) nextSlide();
-    });
   }
 
   async function loadSlides() {
@@ -287,15 +165,23 @@
     const q = `'${FOLDER_ID}' in parents and (${mimeQ}) and trashed=false`;
     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent('files(id,name,mimeType)')}&orderBy=name&pageSize=200&key=${encodeURIComponent(API_KEY)}`;
     try {
-      const res = await fetch(url); const data = await res.json();
+      const res = await fetch(url);
+      const data = await res.json();
       if (data.error) { showError('Drive API error: ' + data.error.message); document.getElementById('list-body').innerHTML = ''; return; }
-      allSlides = data.files || []; renderSlides(getFilteredSlides()); updateBookmarkCount();
+      allSlides = data.files || [];
+      renderSlides(getFilteredSlides());
+      updateBookmarkCount();
     } catch(e) { showError('Network error: ' + e.message); document.getElementById('list-body').innerHTML = ''; }
   }
 
   function renderSlides(slides) {
     const body = document.getElementById('list-body');
-    if (!slides.length) { body.innerHTML = showOnlyBookmarked ? '<div class="empty-state"><div class="emoji">🔖</div><p>No bookmarked hymns yet.</p></div>' : '<div class="empty-state"><div class="emoji">🔍</div><p>No hymns found.</p></div>'; return; }
+    if (!slides.length) {
+      body.innerHTML = showOnlyBookmarked
+        ? '<div class="empty-state"><div class="emoji">🔖</div><p>No bookmarked hymns yet.</p></div>'
+        : '<div class="empty-state"><div class="emoji">🔍</div><p>No hymns found.</p></div>';
+      return;
+    }
     body.innerHTML = '';
     slides.forEach(s => {
       const isBookmarked = !!bookmarks[s.id];
