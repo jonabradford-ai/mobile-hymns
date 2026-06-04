@@ -47,19 +47,23 @@
   #viewer-screen .topbar { background: #1a1a1a; border-color: #333; }
   #viewer-screen .topbar h1 { color: #fff; font-size: 15px; }
   #viewer-screen .icon-btn { color: #aaa; }
-  .viewer-body { flex: 1; display: flex; flex-direction: row; align-items: stretch; background: #000; overflow: hidden; }
-  .side-btn { width: 56px; flex-shrink: 0; background: #1a1a1a; color: #fff; font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: background .15s; border: none; outline: none; }
-  .side-btn:active { background: #333; }
-  .side-btn:disabled { opacity: 0.2; }
-  .side-btn.left { border-right: 1px solid #333; }
-  .side-btn.right { border-left: 1px solid #333; }
-  .frame-wrap { flex: 1; position: relative; background: #000; }
-  .viewer-loading { position: absolute; inset: 0; background: #111; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.3s ease; }
-  .viewer-loading.hidden { opacity: 0; pointer-events: none; }
-  .viewer-loading .spinner { border-color: #444; border-top-color: #888; }
+  .viewer-body { flex: 1; position: relative; background: #000; overflow: hidden; }
   #slide-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.4s ease; }
   #slide-frame.loaded { opacity: 1; }
+  .viewer-loading { position: absolute; inset: 0; background: #111; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.3s ease; pointer-events: none; }
+  .viewer-loading.hidden { opacity: 0; }
+  .viewer-loading .spinner { border-color: #444; border-top-color: #888; }
+  #gesture-overlay { position: absolute; inset: 0; z-index: 20; background: transparent; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+  .flash { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.18); border-radius: 50%; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.15s ease; z-index: 30; }
+  .flash.left { left: 12px; }
+  .flash.right { right: 12px; }
+  .flash.show { opacity: 1; }
   .counter-bar { background: #1a1a1a; border-top: 1px solid #2a2a2a; padding: 8px 16px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); text-align: center; color: #666; font-size: 13px; font-weight: 500; }
+  @media (orientation: landscape) {
+    #viewer-screen .topbar { display: none; }
+    .counter-bar { display: none; }
+    .viewer-body { position: fixed; inset: 0; z-index: 999; }
+  }
 </style>
 </head>
 <body>
@@ -88,13 +92,12 @@
     <button class="icon-btn" onclick="showList()">◀ Back</button>
     <h1 id="viewer-title"></h1>
   </div>
-  <div class="viewer-body">
-    <button class="side-btn left" id="prev-btn" onclick="prevSlide()" disabled>‹</button>
-    <div class="frame-wrap">
-      <div class="viewer-loading" id="viewer-loading"><div class="spinner"></div></div>
-      <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
-    </div>
-    <button class="side-btn right" id="next-btn" onclick="nextSlide()">›</button>
+  <div class="viewer-body" id="viewer-body">
+    <div class="viewer-loading" id="viewer-loading"><div class="spinner"></div></div>
+    <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
+    <div id="gesture-overlay"></div>
+    <div class="flash left" id="flash-left">‹</div>
+    <div class="flash right" id="flash-right">›</div>
   </div>
   <div class="counter-bar" id="counter-bar">Slide 1</div>
 </div>
@@ -109,8 +112,7 @@
 
   const BOOKMARK_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
 
-  showScreen('list-screen');
-  loadSlides();
+  showScreen('list-screen'); loadSlides(); setupGestures();
 
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','visible'));
@@ -123,8 +125,7 @@
     const frame = document.getElementById('slide-frame');
     frame.classList.remove('loaded'); frame.src = '';
     document.getElementById('viewer-loading').classList.remove('hidden');
-    currentPresId = null;
-    showScreen('list-screen');
+    currentPresId = null; showScreen('list-screen');
   }
 
   async function loadSlides() {
@@ -146,8 +147,6 @@
     document.getElementById('viewer-loading').classList.remove('hidden');
     document.getElementById('slide-frame').classList.remove('loaded');
     document.getElementById('counter-bar').textContent = 'Slide 1';
-    document.getElementById('prev-btn').disabled = true;
-    document.getElementById('next-btn').disabled = false;
     showScreen('viewer-screen');
     setTimeout(() => {
       document.getElementById('slide-frame').src =
@@ -163,26 +162,51 @@
   function prevSlide() {
     if (currentSlide <= 1) return;
     currentSlide--;
-    updateCounter();
-    reloadToSlide();
+    document.getElementById('counter-bar').textContent = `Slide ${currentSlide}`;
+    flashIndicator('left'); reloadFrame();
   }
 
   function nextSlide() {
     currentSlide++;
-    updateCounter();
-    reloadToSlide();
+    document.getElementById('counter-bar').textContent = `Slide ${currentSlide}`;
+    flashIndicator('right'); reloadFrame();
   }
 
-  function reloadToSlide() {
+  function reloadFrame() {
     const frame = document.getElementById('slide-frame');
     document.getElementById('viewer-loading').classList.remove('hidden');
     frame.classList.remove('loaded');
     frame.src = `https://docs.google.com/presentation/d/${currentPresId}/embed?start=false&loop=false&delayms=99999&rm=minimal&slide=id.p${currentSlide}`;
   }
 
-  function updateCounter() {
-    document.getElementById('counter-bar').textContent = `Slide ${currentSlide}`;
-    document.getElementById('prev-btn').disabled = currentSlide <= 1;
+  function flashIndicator(side) {
+    const el = document.getElementById('flash-' + side);
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 300);
+  }
+
+  function setupGestures() {
+    const overlay = document.getElementById('gesture-overlay');
+    let startX = 0, startY = 0, startTime = 0;
+    overlay.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY; startTime = Date.now();
+    }, { passive: true });
+    overlay.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      const dt = Date.now() - startTime;
+      const absDx = Math.abs(dx), absDy = Math.abs(dy);
+      if (absDx < 15 && absDy < 15 && dt < 300) {
+        const x = e.changedTouches[0].clientX;
+        const w = overlay.offsetWidth;
+        if (x < w * 0.4) prevSlide();
+        else if (x > w * 0.6) nextSlide();
+        return;
+      }
+      if (absDx > 40 && absDx > absDy * 1.2 && dt < 500) {
+        if (dx < 0) nextSlide(); else prevSlide();
+      }
+    }, { passive: true });
   }
 
   function renderSlides(slides) {
