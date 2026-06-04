@@ -14,7 +14,6 @@
   html, body { height: 100%; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
 
-  /* ── LIST SCREEN ── */
   #list-screen { display: flex; flex-direction: column; flex: 1; }
   .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
   .topbar h1 { font-size: 17px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -45,7 +44,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .error-banner { margin: 12px 16px; background: #fce8e6; border-radius: var(--radius); padding: 12px 16px; font-size: 14px; color: var(--danger); display: none; }
 
-  /* ── VIEWER OVERLAY ── */
+  /* ── VIEWER ── */
   #viewer {
     display: none;
     position: fixed;
@@ -73,7 +72,10 @@
     width: 100%;
     border: none;
     background: #000;
+    opacity: 0;
+    transition: opacity 0.4s ease;
   }
+  #slide-frame.loaded { opacity: 1; }
 
   #viewer-loading {
     position: absolute;
@@ -87,7 +89,6 @@
   #viewer-loading .spinner { border-color: #444; border-top-color: #888; }
   #viewer-loading.hidden { display: none; }
 
-  /* Landscape: hide topbar, iframe fills full screen */
   @media (orientation: landscape) {
     #viewer-topbar { display: none; }
     #viewer-loading { top: 0; }
@@ -96,7 +97,6 @@
 </head>
 <body>
 
-<!-- LIST -->
 <div id="list-screen">
   <div class="topbar">
     <h1>🎵 Mobile Hymn Viewer</h1>
@@ -116,7 +116,6 @@
   </div>
 </div>
 
-<!-- VIEWER (fixed overlay) -->
 <div id="viewer">
   <div id="viewer-topbar">
     <button id="back-btn" onclick="closeViewer()">◀ Back</button>
@@ -138,12 +137,13 @@
   loadSlides();
 
   function openViewer(id, name) {
+    const frame = document.getElementById('slide-frame');
     document.getElementById('viewer-title').textContent = name;
     document.getElementById('viewer-loading').classList.remove('hidden');
+    frame.classList.remove('loaded');
     document.getElementById('viewer').classList.add('open');
     setTimeout(() => {
-      document.getElementById('slide-frame').src =
-        `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
+      frame.src = `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
     }, 100);
   }
 
@@ -153,9 +153,10 @@
   }
 
   function onFrameLoad() {
-    const src = document.getElementById('slide-frame').src;
-    if (!src || src === 'about:blank') return;
+    const frame = document.getElementById('slide-frame');
+    if (!frame.src || frame.src === 'about:blank') return;
     document.getElementById('viewer-loading').classList.add('hidden');
+    frame.classList.add('loaded');
   }
 
   async function loadSlides() {
