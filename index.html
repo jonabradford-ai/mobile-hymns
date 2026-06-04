@@ -47,23 +47,19 @@
   #viewer-screen .topbar { background: #1a1a1a; border-color: #333; }
   #viewer-screen .topbar h1 { color: #fff; font-size: 15px; }
   #viewer-screen .icon-btn { color: #aaa; }
-  .viewer-body { flex: 1; position: relative; overflow: hidden; background: #000; }
+  .viewer-body { flex: 1; display: flex; flex-direction: row; align-items: stretch; background: #000; overflow: hidden; }
+  .side-btn { width: 56px; flex-shrink: 0; background: #1a1a1a; color: #fff; font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: background .15s; border: none; outline: none; }
+  .side-btn:active { background: #333; }
+  .side-btn:disabled { opacity: 0.2; }
+  .side-btn.left { border-right: 1px solid #333; }
+  .side-btn.right { border-left: 1px solid #333; }
+  .frame-wrap { flex: 1; position: relative; background: #000; }
   .viewer-loading { position: absolute; inset: 0; background: #111; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.3s ease; }
   .viewer-loading.hidden { opacity: 0; pointer-events: none; }
   .viewer-loading .spinner { border-color: #444; border-top-color: #888; }
   #slide-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: none; opacity: 0; transition: opacity 0.4s ease; }
   #slide-frame.loaded { opacity: 1; }
-  .swipe-zone { position: absolute; top: 0; bottom: 0; width: 20%; z-index: 5; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; }
-  .swipe-zone:active { opacity: 1; }
-  .swipe-zone.left { left: 0; }
-  .swipe-zone.right { right: 0; }
-  .swipe-zone-arrow { background: rgba(255,255,255,0.15); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; }
-  .slide-nav { background: #1a1a1a; border-top: 1px solid #333; padding: 10px 24px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .nav-btn { background: #2c2c2e; border: none; color: #fff; font-size: 30px; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; flex-shrink: 0; transition: background .1s, opacity .1s; }
-  .nav-btn:active { background: #48484a; }
-  .nav-btn:disabled { opacity: 0.2; pointer-events: none; }
-  .slide-counter { color: #888; font-size: 13px; font-weight: 500; text-align: center; min-width: 110px; line-height: 1.4; }
-  .swipe-hint { font-size: 11px; color: #555; margin-top: 2px; }
+  .counter-bar { background: #1a1a1a; border-top: 1px solid #2a2a2a; padding: 8px 16px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); text-align: center; color: #666; font-size: 13px; font-weight: 500; }
 </style>
 </head>
 <body>
@@ -92,20 +88,15 @@
     <button class="icon-btn" onclick="showList()">◀ Back</button>
     <h1 id="viewer-title"></h1>
   </div>
-  <div class="viewer-body" id="viewer-body">
-    <div class="viewer-loading" id="viewer-loading"><div class="spinner"></div></div>
-    <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
-    <div class="swipe-zone left" onclick="tapPrev()"><div class="swipe-zone-arrow">‹</div></div>
-    <div class="swipe-zone right" onclick="tapNext()"><div class="swipe-zone-arrow">›</div></div>
-  </div>
-  <div class="slide-nav">
-    <button class="nav-btn" id="prev-btn" onclick="prevSlide()">‹</button>
-    <div class="slide-counter">
-      <div id="counter-text">Slide 1</div>
-      <div class="swipe-hint">swipe or tap edges to navigate</div>
+  <div class="viewer-body">
+    <button class="side-btn left" id="prev-btn" onclick="prevSlide()" disabled>‹</button>
+    <div class="frame-wrap">
+      <div class="viewer-loading" id="viewer-loading"><div class="spinner"></div></div>
+      <iframe id="slide-frame" allowfullscreen allow="autoplay" onload="onFrameLoad()"></iframe>
     </div>
-    <button class="nav-btn" id="next-btn" onclick="nextSlide()">›</button>
+    <button class="side-btn right" id="next-btn" onclick="nextSlide()">›</button>
   </div>
+  <div class="counter-bar" id="counter-bar">Slide 1</div>
 </div>
 
 <script>
@@ -120,7 +111,6 @@
 
   showScreen('list-screen');
   loadSlides();
-  setupSwipe();
 
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active','visible'));
@@ -155,12 +145,13 @@
     document.getElementById('viewer-title').textContent = name;
     document.getElementById('viewer-loading').classList.remove('hidden');
     document.getElementById('slide-frame').classList.remove('loaded');
-    document.getElementById('counter-text').textContent = 'Slide 1';
+    document.getElementById('counter-bar').textContent = 'Slide 1';
     document.getElementById('prev-btn').disabled = true;
     document.getElementById('next-btn').disabled = false;
     showScreen('viewer-screen');
     setTimeout(() => {
-      document.getElementById('slide-frame').src = `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
+      document.getElementById('slide-frame').src =
+        `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=99999&rm=minimal`;
     }, 300);
   }
 
@@ -169,35 +160,29 @@
     document.getElementById('viewer-loading').classList.add('hidden');
   }
 
-  function sendArrow(dir) {
+  function prevSlide() {
+    if (currentSlide <= 1) return;
+    currentSlide--;
+    updateCounter();
+    reloadToSlide();
+  }
+
+  function nextSlide() {
+    currentSlide++;
+    updateCounter();
+    reloadToSlide();
+  }
+
+  function reloadToSlide() {
     const frame = document.getElementById('slide-frame');
-    frame.focus();
-    const key = dir === 'next' ? 'ArrowRight' : 'ArrowLeft';
-    frame.contentWindow?.postMessage({ type: 'keydown', key }, '*');
-    document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    document.getElementById('viewer-loading').classList.remove('hidden');
+    frame.classList.remove('loaded');
+    frame.src = `https://docs.google.com/presentation/d/${currentPresId}/embed?start=false&loop=false&delayms=99999&rm=minimal&slide=id.p${currentSlide}`;
   }
 
-  function prevSlide() { if (currentSlide <= 1) return; currentSlide--; updateSlideCounter(); sendArrow('prev'); }
-  function nextSlide() { currentSlide++; updateSlideCounter(); sendArrow('next'); }
-  function tapPrev() { prevSlide(); }
-  function tapNext() { nextSlide(); }
-
-  function updateSlideCounter() {
-    document.getElementById('counter-text').textContent = `Slide ${currentSlide}`;
+  function updateCounter() {
+    document.getElementById('counter-bar').textContent = `Slide ${currentSlide}`;
     document.getElementById('prev-btn').disabled = currentSlide <= 1;
-  }
-
-  function setupSwipe() {
-    const body = document.getElementById('viewer-body');
-    let startX = 0, startY = 0;
-    body.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true });
-    body.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - startX;
-      const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-        if (dx < 0) nextSlide(); else prevSlide();
-      }
-    }, { passive: true });
   }
 
   function renderSlides(slides) {
